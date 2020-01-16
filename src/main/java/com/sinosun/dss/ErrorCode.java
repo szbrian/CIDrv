@@ -1,7 +1,7 @@
 package com.sinosun.dss;
 
 public enum  ErrorCode {
-    ERR_SUCESS	                (0x00	, "正确"),
+    ERR_SUCESS	                (0x00	, "处理成功"),
     // CIDRV返回错误
     CIDRV_ERR_PARAM             ( 0x800, "传入参数错误"),
     CIDRV_ERR_OPEN_FAILED       ( 0x801, "打开usb口或串口失败"),
@@ -81,7 +81,7 @@ public enum  ErrorCode {
 
     public static String getErrMsg(int nErrCode) {
         for ( ErrorCode _item : values() ) {
-            if (_item.getErrCode() == nErrCode) {
+            if ( _item.getErrCode() == nErrCode ) {
                 return _item.getErrMsg();
             }
         }

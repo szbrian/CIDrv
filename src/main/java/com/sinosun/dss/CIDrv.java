@@ -23,6 +23,23 @@ public class CIDrv {
                            String strNewChipID,
                            String strNewVK,
                            byte[] bszSig);
+		int VerifyOperInfo( int nPort, int nSeq, String strVerifyInfo );
+		int ConnectCICalculate( int nPort, int nSeq,
+                                String strAccount,
+                                char cType,
+                                String strDate,
+                                String strTicketNo,
+                                String strPayMoney,
+                                byte[] bszPaycode );
+
+        int ConnectCICalculateExtend( int nPort, int nSeq,
+                                String strAccount,
+                                String strRcvAcc,
+                                char cType,
+                                String strDate,
+                                String strTicketNo,
+                                String strPayMoney,
+                                byte[] bszPaycode );
     }
 
     public int getLastErrorCode() {
@@ -125,109 +142,60 @@ public class CIDrv {
         return  jsonObj.toString();
     }
 
-    public static void main( String[] args ) {
-        //System.out.println( "Hello World!" );
-        JSONObject retJsonObj = null;
-        String strResult = "";
+	public String VerifyOperInfo( int nPort, int nSeq, String strVerifyInfo ) {	
+        JSONObject jsonObj = new JSONObject();
 
-        CIDrv cidrv = new CIDrv();
-        String strAccount = "12345";
+        nRetCode = CIDrvImpl.instance.VerifyOperInfo( nPort, nSeq, strVerifyInfo );
 
-        // 读取密码器编号
-        strResult = cidrv.ReadCIID( 7, 0 );
-        System.out.println( "读取密码器编号" );
-        System.out.println( strResult );
-        retJsonObj = JSONObject.parseObject( strResult );
-        if ( retJsonObj.getIntValue("RetCode") == 0 ) {
-            System.out.println( "密码器编号：" + retJsonObj.getString("CIID") );
-        } else {
-            System.out.println( "读取密码器编号失败，返回错误代码：0x"
-                    + Integer.toHexString( cidrv.getLastErrorCode() ) );
+        jsonObj.put( "RetCode", nRetCode );
+        jsonObj.put( "RetMsg", getErrMsg( nRetCode ) );
+        return jsonObj.toString();
+	}
+
+	public String ConnectCICalculate( int nPort, 
+						int nSeq, 
+						String strAccount,
+						char cType,
+						String strDate,
+						String strTicketNo,
+						String strPayMoney ) {	
+        JSONObject jsonObj = new JSONObject();
+        byte[] bszPaycode = new byte[1024];
+
+        nRetCode = CIDrvImpl.instance.ConnectCICalculate( nPort, nSeq,
+                strAccount, cType, strDate, strTicketNo, strPayMoney, bszPaycode );
+
+        if ( nRetCode == 0 ) {
+            String strPaycode = new String(bszPaycode).substring(0, 16);
+            jsonObj.put( "PAYCODE", strPaycode );
         }
-        System.out.println( "----------------------------------------------------------------" );
 
-        // 密码器发行
-        strResult = cidrv.IssueCI( 7, 1, "1111111111111111" );
-        System.out.println( "密码器发行" );
-        System.out.println( strResult );
-        retJsonObj.clear();
-        retJsonObj = JSONObject.parseObject( strResult );
-        if ( retJsonObj.get("RetCode").toString().equals("0") ) {
-            System.out.println( "密码器发行成功！" );
-        } else {
-            System.out.println("密码器发行失败，返回错误代码：0x"
-                    + Integer.toHexString( cidrv.getLastErrorCode() ) );
-        }
-        System.out.println( "----------------------------------------------------------------" );
+        jsonObj.put( "RetCode", nRetCode );
+        jsonObj.put( "RetMsg", getErrMsg( nRetCode ) );
+        return  jsonObj.toString();
+	}
 
-        // 密码器解锁
-        strResult = cidrv.UnlockCI( 7, 2, "1111111111111111" );
-        System.out.println( "密码器解锁" );
-        System.out.println( strResult );
-        retJsonObj = JSONObject.parseObject( strResult );
-        if ( retJsonObj.get("RetCode").toString().equals("0") ) {
-            System.out.println( "密码器解锁成功！" );
-        } else {
-            System.out.println( "密码器解锁失败，返回错误代码：0x"
-                    + Integer.toHexString( cidrv.getLastErrorCode() ) );
-        }
-        System.out.println( "----------------------------------------------------------------" );
+    public String ConnectCICalculateExtend( int nPort,
+                                      int nSeq,
+                                      String strAccount,
+                                      String strRcvAcct,
+                                      char cType,
+                                      String strDate,
+                                      String strTicketNo,
+                                      String strPayMoney ) {
+        JSONObject jsonObj = new JSONObject();
+        byte[] bszPaycode = new byte[1024];
 
-        // 产生密钥对
-        strResult = cidrv.GenerateKeyPair( 7, 3, strAccount );
-        System.out.println( "产生密钥对" );
-        System.out.println( strResult );
-        retJsonObj = JSONObject.parseObject( strResult );
-        if ( retJsonObj.get("RetCode").toString().equals("0") ) {
-            System.out.println( "产生密钥对成功，\nChipID:"
-                    + (String)retJsonObj.get( "ChipID" )
-                    + "\nVK    :" + (String)retJsonObj.get( "VK" ) );
-        } else {
-            System.out.println( "产生密钥对失败，返回错误代码：0x"
-                    + Integer.toHexString( cidrv.getLastErrorCode() ) );
-        }
-        System.out.println( "----------------------------------------------------------------" );
+        nRetCode = CIDrvImpl.instance.ConnectCICalculateExtend( nPort, nSeq,
+                strAccount, strRcvAcct, cType, strDate, strTicketNo, strPayMoney, bszPaycode );
 
-        // 下载AK
-        String strAK = "11111111111111111111111111111111";
-        strResult = cidrv.DownLoadAK( 7, 4, strAccount, "00", strAK );
-        System.out.println( "下载AK" );
-        System.out.println( strResult );
-        retJsonObj = JSONObject.parseObject( strResult );
-        if ( retJsonObj.get("RetCode").toString().equals("0") ) {
-            System.out.println( "下载AK支成功！" );
-        } else {
-            System.out.println( "下载AK支失败，返回错误代码：0x"
-                    + Integer.toHexString( cidrv.getLastErrorCode() ) );
+        if ( nRetCode == 0 ) {
+            String strPaycode = new String(bszPaycode).substring(0, 16);
+            jsonObj.put( "PAYCODE", strPaycode );
         }
-        System.out.println( "----------------------------------------------------------------" );
 
-        // 获取增发签名
-        String strNewChipID = "11111111111111111111111111111111";
-        String strNewVK = "11111111111111111111111111111111111111111111111111111111111111111111111111111111"
-                + "11111111111111111111111111111111111111111111111111111111111111111111111111111111";
-        strResult = cidrv.GetMachineSign( 7,5, strAccount, strNewChipID, strNewVK );
-        System.out.println( "获取增发签名" );
-        System.out.println( strResult );
-        retJsonObj = JSONObject.parseObject( strResult );
-        if ( retJsonObj.get("RetCode").toString().equals("0") ) {
-            System.out.println( "产生增发签名成功，增发签名：" + retJsonObj.get( "Sig" ) );
-        } else {
-            System.out.println( "产生增发签名失败，返回错误代码：0x"
-                    + Integer.toHexString( cidrv.getLastErrorCode() ) );
-        }
-        System.out.println( "----------------------------------------------------------------" );
-
-        // 删除账号
-        strResult = cidrv.DelAcc( 7, 6, strAccount );
-        System.out.println( "删除账号" );
-        System.out.println( strResult );
-        retJsonObj = JSONObject.parseObject( strResult );
-        if ( retJsonObj.get("RetCode").toString().equals("0") ) {
-            System.out.println( "删除账号成功！" );
-        } else {
-            System.out.println( "删除账号失败，返回错误代码：0x"
-                    + Integer.toHexString( cidrv.getLastErrorCode() ) );
-        }
+        jsonObj.put( "RetCode", nRetCode );
+        jsonObj.put( "RetMsg", getErrMsg( nRetCode ) );
+        return  jsonObj.toString();
     }
 }

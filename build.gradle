@@ -3,9 +3,12 @@ plugins {
 }
 
 group 'com.sinosun.dss'
-version '1.0-SNAPSHOT'
+version '1.0.0'
 
-sourceCompatibility = 1.8
+sourceCompatibility = 1.6
+
+compileJava.options.encoding = 'UTF-8'
+
 
 sourceSets {
     main {
@@ -15,13 +18,17 @@ sourceSets {
     }
 }
 
-allprojects {
-    repositories {
-        maven { url 'https://maven.aliyun.com/repository/public/' }
-        maven { url 'https://maven.aliyun.com/repository/spring/' }
-        mavenLocal()
-        mavenCentral()
+jar {
+    manifest {
+        attributes "Main-Class": ""
+        attributes 'Class-Path': "fastjson-1.2.9.jar jna-3.0.9.jar"
     }
+}
+
+repositories {
+    maven { url 'https://maven.aliyun.com/repository/public/' }
+    mavenLocal()
+    mavenCentral()
 }
 
 dependencies {

@@ -5,9 +5,14 @@ import com.sun.jna.Library;
 import com.sun.jna.Native;
 
 public class CIDrv {
-    static int nRetCode = 0;
+    private static int nRetCode = 0;
+
     public interface CIDrvImpl extends Library {
-        CIDrvImpl instance = (CIDrvImpl) Native.loadLibrary("CI980Drv", CIDrvImpl.class);
+        String strJVM = System.getProperty("sun.arch.data.model");
+
+        String strDllPath = "lib/" + strJVM + "/CI980Drv";
+
+        CIDrvImpl instance = (CIDrvImpl) Native.loadLibrary(strDllPath, CIDrvImpl.class);
         int ReadCIID(int nPort, int nSeq, byte[] bszCIID);
         int IssueCI(int nPort, int nSeq, String strUnlockKey);
         int UnlockCI(int nPort, int nSeq, String strUnlockKey);
@@ -197,5 +202,36 @@ public class CIDrv {
         jsonObj.put( "RetCode", nRetCode );
         jsonObj.put( "RetMsg", getErrMsg( nRetCode ) );
         return  jsonObj.toString();
+    }
+
+    public static void main( String[] args ) {
+        System.out.println( "Hello, This is CIDrv main()!"
+                + "JVM: " + System.getProperty("sun.arch.data.model") );
+
+        int nPort = 0;
+        int nSeq = 0;
+        JSONObject retJsonObj;
+        String strResult;
+
+        if ( args.length != 0 ) {
+            nPort = Integer.valueOf( args[0] );
+        }
+
+        CIDrv cidrv = new CIDrv();
+
+        // 读取密码器编号
+        nSeq = nSeq + 1;
+        strResult = cidrv.ReadCIID( nPort, nSeq );
+        System.out.println( "读取密码器编号" );
+        System.out.println( strResult );
+        retJsonObj = JSONObject.parseObject( strResult );
+        if ( retJsonObj.getIntValue("RetCode" ) == 0 ) {
+            System.out.println( "密码器编号：" + retJsonObj.getString("CIID") );
+        } else {
+            System.out.println( "处理失败，返回错误代码：0x"
+                    + Integer.toHexString( retJsonObj.getIntValue( "RetCode" ) )
+                    + ", "
+                    + "错误信息：" + retJsonObj.getString( "RetMsg" ) );
+        }
     }
 }
